@@ -110,5 +110,15 @@ def solve_Gauss_Seidel(N=N_global, a1=5 + e, a2=-1, a3=-1):
 
 
 if __name__ == '__main__':
+    print("Parameters:")
+    print("index = " + str(index))
+    print("c = " + str(c))
+    print("d = " + str(d))
+    print("e = " + str(e))
+    print("f = " + str(f))
+    print("N_global = " + str(N_global))
+    print("norm_threshold = " + str(norm_threshold))
+    print("max_iterations = " + str(max_iterations))
+    print()
     solve_Jacobi()
     solve_Gauss_Seidel()
