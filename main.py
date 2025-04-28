@@ -1,3 +1,4 @@
+import copy
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,7 +10,8 @@ e = (index % 1000) // 100
 f = (index % 10000) // 1000
 N_global = 1200 + 10 * c + d
 norm_threshold = 1e-9
-max_iterations = 1000
+max_iterations = 200
+chart_number = 1
 
 
 def get_band_matrix_A(N, a1, a2, a3):
@@ -23,14 +25,14 @@ def get_band_matrix_A(N, a1, a2, a3):
             + np.diag(last_diagonal, -2))
 
 
-# Excersise A
+# Exercise A
 def get_matrix_A_vector_b(N=N_global, a1=5 + e, a2=-1, a3=-1):
     matrix_A = get_band_matrix_A(N, a1, a2, a3)
     vector_b = np.array([np.sin(n * (f + 1)) for n in range(1, N + 1)])
     return matrix_A, vector_b
 
 
-# Excersise B part 1/2
+# Exercise B part 1/2
 def solve_Jacobi(N=N_global, a1=5 + e, a2=-1, a3=-1):
     A, b = get_matrix_A_vector_b(N, a1, a2, a3)
 
@@ -61,15 +63,17 @@ def solve_Jacobi(N=N_global, a1=5 + e, a2=-1, a3=-1):
     print(f"Solve Jacobi ended with {iteration_count} iterations in {time_end - time_start} seconds.")
     print(f"Norm at the end: {inorm}\n")
 
+    global chart_number
     plt.semilogy(r_norm)
-    plt.title("Norma residuum w zależności od iteracji (Metoda Jacobiego)")
+    plt.title(f"Wykres {chart_number}: Norma residuum w zależności od iteracji (Metoda Jacobiego)")
+    chart_number += 1
     plt.xlabel("Iteracja")
     plt.ylabel("Rozmiar normy")
     plt.grid(True)
     plt.show()
 
 
-# Excersise B part 2/2
+# Exercise B part 2/2
 def solve_Gauss_Seidel(N=N_global, a1=5 + e, a2=-1, a3=-1):
     A, b = get_matrix_A_vector_b(N, a1, a2, a3)
 
@@ -101,12 +105,24 @@ def solve_Gauss_Seidel(N=N_global, a1=5 + e, a2=-1, a3=-1):
     print(f"Solve Gauss-Seidel ended with {iteration_count} iterations in {time_end - time_start} seconds.")
     print(f"Norm at the end: {inorm}\n")
 
+    global chart_number
     plt.semilogy(r_norm)
-    plt.title("Norma residuum w zależności od iteracji (Metoda Gaussa-Seidla)")
+    plt.title(f"Wykres {chart_number}: Norma residuum w zależności od iteracji (Metoda Gaussa-Seidla)")
+    chart_number += 1
     plt.xlabel("Iteracja")
     plt.ylabel("Rozmiar normy")
     plt.grid(True)
     plt.show()
+
+
+def LU_decomposition(A, m):
+    U = copy.copy(A)
+    L = np.eye(m)
+    for i in range(2, m + 1):
+        for j in range(1, i):
+            L[i - 1, j - 1] = U[i - 1, j - 1] / U[j - 1, j - 1]
+            U[i - 1, :] = U[i - 1, :] - L[i - 1, j - 1] * U[j - 1, :]
+    return L, U
 
 
 if __name__ == '__main__':
@@ -120,5 +136,9 @@ if __name__ == '__main__':
     print("norm_threshold = " + str(norm_threshold))
     print("max_iterations = " + str(max_iterations))
     print()
+    # Exercise B
     solve_Jacobi()
     solve_Gauss_Seidel()
+    # Exercise C
+    solve_Jacobi(a1=3)
+    solve_Gauss_Seidel(a1=3)
