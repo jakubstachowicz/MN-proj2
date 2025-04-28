@@ -12,6 +12,7 @@ N_global = 1200 + 10 * c + d
 norm_threshold = 1e-9
 max_iterations = 200
 chart_number = 1
+num_of_runs_for_average = 10
 
 
 def get_band_matrix_A(N, a1, a2, a3):
@@ -33,7 +34,7 @@ def get_matrix_A_vector_b(N=N_global, a1=5 + e, a2=-1, a3=-1):
 
 
 # Exercise B part 1/2
-def solve_Jacobi(N=N_global, a1=5 + e, a2=-1, a3=-1):
+def solve_Jacobi(N=N_global, a1=5 + e, a2=-1, a3=-1, show_chart=True):
     A, b = get_matrix_A_vector_b(N, a1, a2, a3)
 
     time_start = time.time()
@@ -63,18 +64,21 @@ def solve_Jacobi(N=N_global, a1=5 + e, a2=-1, a3=-1):
     print(f"Solve Jacobi ended with {iteration_count} iterations in {time_end - time_start} seconds.")
     print(f"Norm at the end: {inorm}\n")
 
-    global chart_number
-    plt.semilogy(r_norm)
-    plt.title(f"Wykres {chart_number}: Norma residuum w zależności od iteracji (Metoda Jacobiego)")
-    chart_number += 1
-    plt.xlabel("Iteracja")
-    plt.ylabel("Rozmiar normy")
-    plt.grid(True)
-    plt.show()
+    if show_chart:
+        global chart_number
+        plt.semilogy(r_norm)
+        plt.title(f"Wykres {chart_number}: Norma residuum w zależności od iteracji (Metoda Jacobiego)")
+        chart_number += 1
+        plt.xlabel("Iteracja")
+        plt.ylabel("Rozmiar normy")
+        plt.grid(True)
+        plt.show()
+
+    return time_end - time_start
 
 
 # Exercise B part 2/2
-def solve_Gauss_Seidel(N=N_global, a1=5 + e, a2=-1, a3=-1):
+def solve_Gauss_Seidel(N=N_global, a1=5 + e, a2=-1, a3=-1, show_chart=True):
     A, b = get_matrix_A_vector_b(N, a1, a2, a3)
 
     time_start = time.time()
@@ -105,14 +109,17 @@ def solve_Gauss_Seidel(N=N_global, a1=5 + e, a2=-1, a3=-1):
     print(f"Solve Gauss-Seidel ended with {iteration_count} iterations in {time_end - time_start} seconds.")
     print(f"Norm at the end: {inorm}\n")
 
-    global chart_number
-    plt.semilogy(r_norm)
-    plt.title(f"Wykres {chart_number}: Norma residuum w zależności od iteracji (Metoda Gaussa-Seidla)")
-    chart_number += 1
-    plt.xlabel("Iteracja")
-    plt.ylabel("Rozmiar normy")
-    plt.grid(True)
-    plt.show()
+    if show_chart:
+        global chart_number
+        plt.semilogy(r_norm)
+        plt.title(f"Wykres {chart_number}: Norma residuum w zależności od iteracji (Metoda Gaussa-Seidla)")
+        chart_number += 1
+        plt.xlabel("Iteracja")
+        plt.ylabel("Rozmiar normy")
+        plt.grid(True)
+        plt.show()
+
+    return time_end - time_start
 
 
 def LU_decomposition(A, m):
@@ -123,6 +130,71 @@ def LU_decomposition(A, m):
             L[i - 1, j - 1] = U[i - 1, j - 1] / U[j - 1, j - 1]
             U[i - 1, :] = U[i - 1, :] - L[i - 1, j - 1] * U[j - 1, :]
     return L, U
+
+
+# Exercise D
+def solve_direct(N=N_global, a1=5 + e, a2=-1, a3=-1):
+    A, b = get_matrix_A_vector_b(N, a1, a2, a3)
+
+    time_start = time.time()
+
+    L, U = LU_decomposition(A, N)
+
+    y = np.linalg.solve(L, b)
+    x = np.linalg.solve(U, y)
+
+    r_norm = np.linalg.norm(A @ x - b)
+
+    time_end = time.time()
+    print(f"Solve direct ended in {time_end - time_start} seconds.")
+    print(f"Norm at the end: {r_norm}\n")
+
+    return time_end - time_start
+
+
+# Exercise E
+def compare_methods():
+    matrix_sizes = [100, 500, 1000, 2000, 3000]
+
+    time_direct = [0 for _ in range(len(matrix_sizes))]
+    time_Jacobi = [0 for _ in range(len(matrix_sizes))]
+    time_Gauss_Seidel = [0 for _ in range(len(matrix_sizes))]
+
+    for idx, N in enumerate(matrix_sizes):
+        print(f"=========================")
+        print(f"Matrix size {N}")
+        for i in range(num_of_runs_for_average):
+            print(f"--- Run {i} ---")
+            time_direct[idx] += solve_direct(N=N)
+            time_Jacobi[idx] += solve_Jacobi(N=N, show_chart=False)
+            time_Gauss_Seidel[idx] += solve_Gauss_Seidel(N=N, show_chart=False)
+        time_direct[idx] /= num_of_runs_for_average
+        time_Jacobi[idx] /= num_of_runs_for_average
+        time_Gauss_Seidel[idx] /= num_of_runs_for_average
+
+    global chart_number
+    plt.semilogy(matrix_sizes, time_direct)
+    plt.semilogy(matrix_sizes, time_Jacobi)
+    plt.semilogy(matrix_sizes, time_Gauss_Seidel)
+    plt.legend(['Metoda bezpośrednia (LU)', 'Metoda Jacobiego', 'Metoda Gaussa-Seidla'])
+    plt.title(f"Wykres {chart_number}: Średni czas działania a metoda obliczeń")
+    chart_number += 1
+    plt.xlabel("Rozmiar macierzy")
+    plt.ylabel("Czas, s")
+    plt.grid(True)
+    plt.show()
+
+    plt.plot(matrix_sizes, time_direct)
+    plt.plot(matrix_sizes, time_Jacobi)
+    plt.plot(matrix_sizes, time_Gauss_Seidel)
+    plt.legend(['Metoda bezpośrednia (LU)', 'Metoda Jacobiego', 'Metoda Gaussa-Seidla'])
+    plt.title(f"Wykres {chart_number}: Średni czas działania a metoda obliczeń")
+    chart_number += 1
+    plt.xlabel("Rozmiar macierzy")
+    plt.ylabel("Czas, s")
+    plt.grid(True)
+    plt.show()
+    pass
 
 
 if __name__ == '__main__':
@@ -142,3 +214,7 @@ if __name__ == '__main__':
     # Exercise C
     solve_Jacobi(a1=3)
     solve_Gauss_Seidel(a1=3)
+    # Exercise D
+    solve_direct(a1=3)
+    # Exercise E
+    compare_methods()
